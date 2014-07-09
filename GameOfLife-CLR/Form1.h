@@ -23,6 +23,9 @@ namespace GameOfLifeCLR {
 			//
 			//TODO: Add the constructor code here
 			//
+
+			PrepareFields();
+			FillRandomBuffer();
 		}
 
 	protected:
@@ -42,6 +45,9 @@ namespace GameOfLifeCLR {
 	private: System::Windows::Forms::ToolStripMenuItem^  optionsToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  exitToolStripMenuItem;
 	private: System::Windows::Forms::PictureBox^  pictureBox1;
+	private: System::Windows::Forms::Timer^  timer1;
+	private: System::Windows::Forms::ToolStripMenuItem^  startToolStripMenuItem;
+	private: System::ComponentModel::IContainer^  components;
 	protected: 
 
 	protected: 
@@ -50,7 +56,7 @@ namespace GameOfLifeCLR {
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
-		System::ComponentModel::Container ^components;
+
 
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -59,18 +65,22 @@ namespace GameOfLifeCLR {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+			this->components = (gcnew System::ComponentModel::Container());
 			this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
 			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->optionsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->startToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->pictureBox1 = (gcnew System::Windows::Forms::PictureBox());
+			this->timer1 = (gcnew System::Windows::Forms::Timer(this->components));
 			this->menuStrip1->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->pictureBox1))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// menuStrip1
 			// 
-			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->fileToolStripMenuItem});
+			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->fileToolStripMenuItem, 
+				this->startToolStripMenuItem});
 			this->menuStrip1->Location = System::Drawing::Point(0, 0);
 			this->menuStrip1->Name = L"menuStrip1";
 			this->menuStrip1->Size = System::Drawing::Size(784, 24);
@@ -99,6 +109,13 @@ namespace GameOfLifeCLR {
 			this->exitToolStripMenuItem->Text = L"Exit";
 			this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::exitToolStripMenuItem_Click);
 			// 
+			// startToolStripMenuItem
+			// 
+			this->startToolStripMenuItem->Name = L"startToolStripMenuItem";
+			this->startToolStripMenuItem->Size = System::Drawing::Size(43, 20);
+			this->startToolStripMenuItem->Text = L"Start";
+			this->startToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::startToolStripMenuItem_Click);
+			// 
 			// pictureBox1
 			// 
 			this->pictureBox1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom) 
@@ -110,6 +127,11 @@ namespace GameOfLifeCLR {
 			this->pictureBox1->TabIndex = 2;
 			this->pictureBox1->TabStop = false;
 			this->pictureBox1->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &Form1::pictureBox1_Paint);
+			// 
+			// timer1
+			// 
+			this->timer1->Enabled = true;
+			this->timer1->Tick += gcnew System::EventHandler(this, &Form1::timer1_Tick);
 			// 
 			// Form1
 			// 
@@ -131,6 +153,9 @@ namespace GameOfLifeCLR {
 		}
 #pragma endregion
 
+		static array<array<unsigned char>^>^ frontBuffer;
+		static array<array<unsigned char>^>^ backBuffer;
+
 		void Draw()
 		{
 			int picw = this->pictureBox1->Width;
@@ -138,14 +163,13 @@ namespace GameOfLifeCLR {
 
 			Bitmap^ bmp = gcnew Bitmap(picw, pich);
 			Graphics^ g = Graphics::FromImage(bmp);
+
 			g->SmoothingMode = Drawing2D::SmoothingMode::HighQuality;
 			g->CompositingQuality = Drawing2D::CompositingQuality::HighQuality;
 			g->InterpolationMode = Drawing2D::InterpolationMode::HighQualityBicubic;
 
 			int wndw = Config::getWidth();
 			int wndh = Config::getHeight();
-
-			array<Rectangle> ^rectangles = gcnew array<Rectangle> (wndw * wndh);
 
 			float stepw = picw / wndw;
 			float steph = pich / wndh;
@@ -154,14 +178,100 @@ namespace GameOfLifeCLR {
 			{
 				for (int j = 0; j < wndh; j++)
 				{
-					rectangles[i*wndh+j] = Rectangle(i*stepw + 1, j*steph + 1, stepw - 1, steph - 1);
+					g->DrawRectangle(Pens::Aqua, i*stepw + 1, j*steph + 1, stepw - 1, steph - 1);
+					if (frontBuffer[i][j] == 0)
+					{
+						g->FillRectangle(Brushes::White, i*stepw + 1, j*steph + 1, stepw - 1, steph - 1);
+					} 
+					else
+					{
+						g->FillRectangle(Brushes::Black, i*stepw + 1, j*steph + 1, stepw - 1, steph - 1);
+					}
 				}
 			}
 
-			g->DrawRectangles(Pens::Aqua, rectangles);
-			g->FillRectangles(Brushes::White, rectangles);
-
 			this->pictureBox1->Image = bmp;
+		}
+
+		void PrepareFields()
+		{
+			frontBuffer = gcnew array<array<unsigned char>^>(Config::getWidth());
+			backBuffer = gcnew array<array<unsigned char>^>(Config::getWidth());
+
+			for (int i = 0; i < Config::getWidth(); i++)
+			{
+				frontBuffer[i] = gcnew array<unsigned char>(Config::getHeight());
+				backBuffer[i] = gcnew array<unsigned char>(Config::getHeight());
+			}
+		}
+
+		void FillRandomBuffer()
+		{
+			Random^ rnd = gcnew Random();
+			for (int i = 0; i < backBuffer->Length; i++)
+			{
+				for (int j = 0; j < backBuffer[i]->Length; j++)
+				{
+					backBuffer[i][j] = Math::Floor(rnd->NextDouble()+0.5);
+				}
+			}
+
+			backBuffer->CopyTo(frontBuffer, 0);
+
+			pictureBox1->Invalidate();
+		}
+
+		int CountNeighbours(int x, int y)
+		{
+			int counter = 0;
+
+			for (int i = Math::Max(x-1, 0); i < Math::Min(x+1, backBuffer->Length); i++)
+			{
+				for (int j = Math::Max(y-1, 0); i < Math::Min(y+1, backBuffer[0]->Length); j++)
+				{
+					if (frontBuffer[i][j] == 1)
+					{
+						counter++;
+					}
+				}
+			}
+			return counter;
+		}
+
+		void CalculateGeneration()
+		{
+			for (int i = 0; i < backBuffer->Length; i++)
+			{
+				for (int j = 0; j < backBuffer[0]->Length; j++)
+				{
+					if (frontBuffer[i][j] == 0)
+					{
+						switch (CountNeighbours(i, j) - 1)
+						{
+							case 3:
+								backBuffer[i][j] = 1;
+								break;
+						}
+					}
+					else
+					{
+						switch (CountNeighbours(i, j))
+						{
+							case 2:
+							case 3:
+								backBuffer[i][j] = 1;
+								break;
+							default:
+								backBuffer[i][j] = 0;
+								break;
+						}
+					}
+				}
+			}
+
+			backBuffer->CopyTo(frontBuffer, 0);
+
+			pictureBox1->Invalidate();
 		}
 
 	private: System::Void exitToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
@@ -181,6 +291,14 @@ private: System::Void Form1_SizeChanged(System::Object^  sender, System::EventAr
 private: System::Void pictureBox1_Paint(System::Object^  sender, System::Windows::Forms::PaintEventArgs^  e) 
 		 {
 			 Draw();
+		 }
+private: System::Void timer1_Tick(System::Object^  sender, System::EventArgs^  e) 
+		 {
+			 //FillRandomBuffer();
+		 }
+private: System::Void startToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
+		 {
+			 FillRandomBuffer();
 		 }
 };
 }
