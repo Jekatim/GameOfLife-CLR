@@ -36,11 +36,12 @@ namespace GameOfLifeCLR {
 				delete components;
 			}
 		}
-	private: System::Windows::Forms::Panel^  panel1;
+
 	private: System::Windows::Forms::MenuStrip^  menuStrip1;
 	private: System::Windows::Forms::ToolStripMenuItem^  fileToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  optionsToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  exitToolStripMenuItem;
+	private: System::Windows::Forms::PictureBox^  pictureBox1;
 	protected: 
 
 	protected: 
@@ -58,25 +59,14 @@ namespace GameOfLifeCLR {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			this->panel1 = (gcnew System::Windows::Forms::Panel());
 			this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
 			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->optionsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->pictureBox1 = (gcnew System::Windows::Forms::PictureBox());
 			this->menuStrip1->SuspendLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->pictureBox1))->BeginInit();
 			this->SuspendLayout();
-			// 
-			// panel1
-			// 
-			this->panel1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom) 
-				| System::Windows::Forms::AnchorStyles::Left) 
-				| System::Windows::Forms::AnchorStyles::Right));
-			this->panel1->AutoSize = true;
-			this->panel1->Location = System::Drawing::Point(12, 27);
-			this->panel1->Name = L"panel1";
-			this->panel1->Size = System::Drawing::Size(760, 523);
-			this->panel1->TabIndex = 0;
-			this->panel1->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &Form1::panel1_Paint);
 			// 
 			// menuStrip1
 			// 
@@ -109,12 +99,24 @@ namespace GameOfLifeCLR {
 			this->exitToolStripMenuItem->Text = L"Exit";
 			this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::exitToolStripMenuItem_Click);
 			// 
+			// pictureBox1
+			// 
+			this->pictureBox1->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((((System::Windows::Forms::AnchorStyles::Top | System::Windows::Forms::AnchorStyles::Bottom) 
+				| System::Windows::Forms::AnchorStyles::Left) 
+				| System::Windows::Forms::AnchorStyles::Right));
+			this->pictureBox1->Location = System::Drawing::Point(12, 27);
+			this->pictureBox1->Name = L"pictureBox1";
+			this->pictureBox1->Size = System::Drawing::Size(760, 523);
+			this->pictureBox1->TabIndex = 2;
+			this->pictureBox1->TabStop = false;
+			this->pictureBox1->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &Form1::pictureBox1_Paint);
+			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(784, 562);
-			this->Controls->Add(this->panel1);
+			this->Controls->Add(this->pictureBox1);
 			this->Controls->Add(this->menuStrip1);
 			this->MainMenuStrip = this->menuStrip1;
 			this->Name = L"Form1";
@@ -122,11 +124,46 @@ namespace GameOfLifeCLR {
 			this->SizeChanged += gcnew System::EventHandler(this, &Form1::Form1_SizeChanged);
 			this->menuStrip1->ResumeLayout(false);
 			this->menuStrip1->PerformLayout();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->pictureBox1))->EndInit();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
 		}
 #pragma endregion
+
+		void Draw()
+		{
+			int picw = this->pictureBox1->Width;
+			int pich = this->pictureBox1->Height;
+
+			Bitmap^ bmp = gcnew Bitmap(picw, pich);
+			Graphics^ g = Graphics::FromImage(bmp);
+			g->SmoothingMode = Drawing2D::SmoothingMode::HighQuality;
+			g->CompositingQuality = Drawing2D::CompositingQuality::HighQuality;
+			g->InterpolationMode = Drawing2D::InterpolationMode::HighQualityBicubic;
+
+			int wndw = Config::getWidth();
+			int wndh = Config::getHeight();
+
+			array<Rectangle> ^rectangles = gcnew array<Rectangle> (wndw * wndh);
+
+			float stepw = picw / wndw;
+			float steph = pich / wndh;
+
+			for (int i = 0; i < wndw; i++)
+			{
+				for (int j = 0; j < wndh; j++)
+				{
+					rectangles[i*wndh+j] = Rectangle(i*stepw + 1, j*steph + 1, stepw - 1, steph - 1);
+				}
+			}
+
+			g->DrawRectangles(Pens::Aqua, rectangles);
+			g->FillRectangles(Brushes::White, rectangles);
+
+			this->pictureBox1->Image = bmp;
+		}
+
 	private: System::Void exitToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
 			 {
 				 Application::Exit();
@@ -135,35 +172,15 @@ private: System::Void optionsToolStripMenuItem_Click(System::Object^  sender, Sy
 		 {
 			 ConfigDialog^ cfgdlg = gcnew ConfigDialog();
 			 cfgdlg->ShowDialog();
-			 panel1->Invalidate();
-		 }
-private: System::Void panel1_Paint(System::Object^  sender, System::Windows::Forms::PaintEventArgs^  e) 
-		 {
-			 Graphics^ g = e->Graphics;
-			 g->SmoothingMode = Drawing2D::SmoothingMode::HighQuality;
-
-			 int wndw = Config::getWidth();
-			 int wndh = Config::getHeight();
-
-			 array<Rectangle> ^rectangles = gcnew array<Rectangle> (wndw * wndh);
-
-			 float stepw = this->Width / wndw;
-			 float steph = this->Height / wndh;
-
-			 for (int i = 0; i < wndw-1; i++)
-			 {
-				 for (int j = 0; j < wndh-1; j++)
-				 {
-					 rectangles[i*wndh+j] = Rectangle(i*stepw + 1, j*steph + 1, stepw - 1, steph - 1);
-				 }
-			 }
-
-			 g->DrawRectangles(Pens::Aqua, rectangles);
-			 g->FillRectangles(Brushes::White, rectangles);
+			 pictureBox1->Invalidate();
 		 }
 private: System::Void Form1_SizeChanged(System::Object^  sender, System::EventArgs^  e) 
 		 {
-			 panel1->Invalidate();
+			 pictureBox1->Invalidate();
+		 }
+private: System::Void pictureBox1_Paint(System::Object^  sender, System::Windows::Forms::PaintEventArgs^  e) 
+		 {
+			 Draw();
 		 }
 };
 }
