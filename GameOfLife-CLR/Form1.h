@@ -130,7 +130,6 @@ namespace GameOfLifeCLR {
 			// 
 			// timer1
 			// 
-			this->timer1->Enabled = true;
 			this->timer1->Tick += gcnew System::EventHandler(this, &Form1::timer1_Tick);
 			// 
 			// Form1
@@ -225,9 +224,9 @@ namespace GameOfLifeCLR {
 		{
 			int counter = 0;
 
-			for (int i = Math::Max(x-1, 0); i < Math::Min(x+1, backBuffer->Length); i++)
+			for (int i = Math::Max(x-1, 0); i <= Math::Min(x+1, frontBuffer->Length - 1); i++)
 			{
-				for (int j = Math::Max(y-1, 0); i < Math::Min(y+1, backBuffer[0]->Length); j++)
+				for (int j = Math::Max(y-1, 0); j <= Math::Min(y+1, frontBuffer[0]->Length - 1); j++)
 				{
 					if (frontBuffer[i][j] == 1)
 					{
@@ -240,13 +239,17 @@ namespace GameOfLifeCLR {
 
 		void CalculateGeneration()
 		{
+			int neighbours = 0;
+
 			for (int i = 0; i < backBuffer->Length; i++)
 			{
 				for (int j = 0; j < backBuffer[0]->Length; j++)
 				{
+					neighbours = CountNeighbours(i, j);
+
 					if (frontBuffer[i][j] == 0)
 					{
-						switch (CountNeighbours(i, j) - 1)
+						switch (neighbours)
 						{
 							case 3:
 								backBuffer[i][j] = 1;
@@ -255,7 +258,7 @@ namespace GameOfLifeCLR {
 					}
 					else
 					{
-						switch (CountNeighbours(i, j))
+						switch (neighbours - 1)
 						{
 							case 2:
 							case 3:
@@ -282,6 +285,8 @@ private: System::Void optionsToolStripMenuItem_Click(System::Object^  sender, Sy
 		 {
 			 ConfigDialog^ cfgdlg = gcnew ConfigDialog();
 			 cfgdlg->ShowDialog();
+
+			 PrepareFields();
 			 pictureBox1->Invalidate();
 		 }
 private: System::Void Form1_SizeChanged(System::Object^  sender, System::EventArgs^  e) 
@@ -292,13 +297,14 @@ private: System::Void pictureBox1_Paint(System::Object^  sender, System::Windows
 		 {
 			 Draw();
 		 }
-private: System::Void timer1_Tick(System::Object^  sender, System::EventArgs^  e) 
-		 {
-			 //FillRandomBuffer();
-		 }
 private: System::Void startToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
 		 {
+			 CalculateGeneration();
+		 }
+private: System::Void timer1_Tick(System::Object^  sender, System::EventArgs^  e) 
+		 {
 			 FillRandomBuffer();
+			 //pictureBox1->Invalidate();
 		 }
 };
 }
