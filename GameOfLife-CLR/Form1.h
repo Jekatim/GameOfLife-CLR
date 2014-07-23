@@ -10,6 +10,7 @@ namespace GameOfLifeCLR {
 	using namespace System::Windows::Forms;
 	using namespace System::Data;
 	using namespace System::Drawing;
+	using namespace System::Threading;
 
 	/// <summary>
 	/// Summary for Form1
@@ -45,8 +46,9 @@ namespace GameOfLifeCLR {
 	private: System::Windows::Forms::ToolStripMenuItem^  optionsToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  exitToolStripMenuItem;
 	private: System::Windows::Forms::PictureBox^  pictureBox1;
-	private: System::Windows::Forms::Timer^  timer1;
+
 	private: System::Windows::Forms::ToolStripMenuItem^  startToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  stopToolStripMenuItem;
 	private: System::ComponentModel::IContainer^  components;
 	protected: 
 
@@ -65,22 +67,21 @@ namespace GameOfLifeCLR {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			this->components = (gcnew System::ComponentModel::Container());
 			this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
 			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->optionsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->startToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->pictureBox1 = (gcnew System::Windows::Forms::PictureBox());
-			this->timer1 = (gcnew System::Windows::Forms::Timer(this->components));
+			this->stopToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menuStrip1->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->pictureBox1))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// menuStrip1
 			// 
-			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->fileToolStripMenuItem, 
-				this->startToolStripMenuItem});
+			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->fileToolStripMenuItem, 
+				this->startToolStripMenuItem, this->stopToolStripMenuItem});
 			this->menuStrip1->Location = System::Drawing::Point(0, 0);
 			this->menuStrip1->Name = L"menuStrip1";
 			this->menuStrip1->Size = System::Drawing::Size(784, 24);
@@ -98,14 +99,14 @@ namespace GameOfLifeCLR {
 			// optionsToolStripMenuItem
 			// 
 			this->optionsToolStripMenuItem->Name = L"optionsToolStripMenuItem";
-			this->optionsToolStripMenuItem->Size = System::Drawing::Size(116, 22);
+			this->optionsToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->optionsToolStripMenuItem->Text = L"Options";
 			this->optionsToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::optionsToolStripMenuItem_Click);
 			// 
 			// exitToolStripMenuItem
 			// 
 			this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
-			this->exitToolStripMenuItem->Size = System::Drawing::Size(116, 22);
+			this->exitToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->exitToolStripMenuItem->Text = L"Exit";
 			this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::exitToolStripMenuItem_Click);
 			// 
@@ -128,9 +129,12 @@ namespace GameOfLifeCLR {
 			this->pictureBox1->TabStop = false;
 			this->pictureBox1->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &Form1::pictureBox1_Paint);
 			// 
-			// timer1
+			// stopToolStripMenuItem
 			// 
-			this->timer1->Tick += gcnew System::EventHandler(this, &Form1::timer1_Tick);
+			this->stopToolStripMenuItem->Name = L"stopToolStripMenuItem";
+			this->stopToolStripMenuItem->Size = System::Drawing::Size(43, 20);
+			this->stopToolStripMenuItem->Text = L"Stop";
+			this->stopToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::stopToolStripMenuItem_Click);
 			// 
 			// Form1
 			// 
@@ -152,44 +156,24 @@ namespace GameOfLifeCLR {
 		}
 #pragma endregion
 
+		//////////////////////////////////////////////////////////////////////////
+
 		static array<array<unsigned char>^>^ frontBuffer;
 		static array<array<unsigned char>^>^ backBuffer;
 
-		void Draw()
+		Thread^ calcthr;
+		static bool resume = false;
+
+		static void CalcThread(System::Object^ data)
 		{
-			int picw = this->pictureBox1->Width;
-			int pich = this->pictureBox1->Height;
+			Form1^ pForm1 = (Form1^)data;
 
-			Bitmap^ bmp = gcnew Bitmap(picw, pich);
-			Graphics^ g = Graphics::FromImage(bmp);
-
-			g->SmoothingMode = Drawing2D::SmoothingMode::HighQuality;
-			g->CompositingQuality = Drawing2D::CompositingQuality::HighQuality;
-			g->InterpolationMode = Drawing2D::InterpolationMode::HighQualityBicubic;
-
-			int wndw = Config::getWidth();
-			int wndh = Config::getHeight();
-
-			float stepw = picw / wndw;
-			float steph = pich / wndh;
-
-			for (int i = 0; i < wndw; i++)
+			while (resume)
 			{
-				for (int j = 0; j < wndh; j++)
-				{
-					g->DrawRectangle(Pens::Aqua, i*stepw + 1, j*steph + 1, stepw - 1, steph - 1);
-					if (frontBuffer[i][j] == 0)
-					{
-						g->FillRectangle(Brushes::White, i*stepw + 1, j*steph + 1, stepw - 1, steph - 1);
-					} 
-					else
-					{
-						g->FillRectangle(Brushes::Black, i*stepw + 1, j*steph + 1, stepw - 1, steph - 1);
-					}
-				}
-			}
+				pForm1->CalculateGeneration();
 
-			this->pictureBox1->Image = bmp;
+				pForm1->pictureBox1->Invalidate();
+			}
 		}
 
 		void PrepareFields()
@@ -279,6 +263,7 @@ namespace GameOfLifeCLR {
 
 	private: System::Void exitToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
 			 {
+				 resume = false;
 				 Application::Exit();
 			 }
 private: System::Void optionsToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
@@ -287,6 +272,7 @@ private: System::Void optionsToolStripMenuItem_Click(System::Object^  sender, Sy
 			 cfgdlg->ShowDialog();
 
 			 PrepareFields();
+			 FillRandomBuffer();
 			 pictureBox1->Invalidate();
 		 }
 private: System::Void Form1_SizeChanged(System::Object^  sender, System::EventArgs^  e) 
@@ -295,16 +281,51 @@ private: System::Void Form1_SizeChanged(System::Object^  sender, System::EventAr
 		 }
 private: System::Void pictureBox1_Paint(System::Object^  sender, System::Windows::Forms::PaintEventArgs^  e) 
 		 {
-			 Draw();
+			 int picw = this->pictureBox1->Width;
+			 int pich = this->pictureBox1->Height;
+
+			 Bitmap^ bmp = gcnew Bitmap(picw, pich);
+			 Graphics^ g = Graphics::FromImage(bmp);
+
+			 g->SmoothingMode = Drawing2D::SmoothingMode::HighQuality;
+			 g->CompositingQuality = Drawing2D::CompositingQuality::HighQuality;
+			 g->InterpolationMode = Drawing2D::InterpolationMode::HighQualityBicubic;
+
+			 int wndw = Config::getWidth();
+			 int wndh = Config::getHeight();
+
+			 float stepw = picw / wndw;
+			 float steph = pich / wndh;
+
+			 for (int i = 0; i < wndw; i++)
+			 {
+				 for (int j = 0; j < wndh; j++)
+				 {
+					 g->DrawRectangle(Pens::Aqua, i*stepw + 1, j*steph + 1, stepw - 1, steph - 1);
+					 if (frontBuffer[i][j] == 0)
+					 {
+						 g->FillRectangle(Brushes::White, i*stepw + 1, j*steph + 1, stepw - 1, steph - 1);
+					 } 
+					 else
+					 {
+						 g->FillRectangle(Brushes::Black, i*stepw + 1, j*steph + 1, stepw - 1, steph - 1);
+					 }
+				 }
+			 }
+
+			 this->pictureBox1->Image = bmp;
 		 }
 private: System::Void startToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
 		 {
-			 CalculateGeneration();
+			 resume = true;
+			 this->calcthr = gcnew Thread(gcnew ParameterizedThreadStart(&CalcThread));
+			 this->calcthr->Start(this);
 		 }
-private: System::Void timer1_Tick(System::Object^  sender, System::EventArgs^  e) 
+
+private: System::Void stopToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
 		 {
-			 FillRandomBuffer();
-			 //pictureBox1->Invalidate();
+			 resume = false;
+			 calcthr->Join();
 		 }
 };
 }
