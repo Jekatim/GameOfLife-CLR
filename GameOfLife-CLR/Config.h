@@ -15,8 +15,8 @@ public:
 	static void setHeight(int h){mWorldHeight = h;};
 
 private:
-	static int mWorldWidth = 50;
-	static int mWorldHeight = 40;
+	static int mWorldWidth = 10;
+	static int mWorldHeight = 10;
 
 	
 };

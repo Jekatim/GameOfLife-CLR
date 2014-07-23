@@ -48,7 +48,10 @@ namespace GameOfLifeCLR {
 	private: System::Windows::Forms::PictureBox^  pictureBox1;
 
 	private: System::Windows::Forms::ToolStripMenuItem^  startToolStripMenuItem;
-	private: System::Windows::Forms::ToolStripMenuItem^  stopToolStripMenuItem;
+
+	private: System::Windows::Forms::ToolStripMenuItem^  startToolStripMenuItem1;
+	private: System::Windows::Forms::ToolStripMenuItem^  stopToolStripMenuItem1;
+	private: System::Windows::Forms::ToolStripMenuItem^  stepToolStripMenuItem;
 	private: System::ComponentModel::IContainer^  components;
 	protected: 
 
@@ -72,16 +75,18 @@ namespace GameOfLifeCLR {
 			this->optionsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->startToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->startToolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->stopToolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->stepToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->pictureBox1 = (gcnew System::Windows::Forms::PictureBox());
-			this->stopToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menuStrip1->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->pictureBox1))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// menuStrip1
 			// 
-			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->fileToolStripMenuItem, 
-				this->startToolStripMenuItem, this->stopToolStripMenuItem});
+			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {this->fileToolStripMenuItem, 
+				this->startToolStripMenuItem});
 			this->menuStrip1->Location = System::Drawing::Point(0, 0);
 			this->menuStrip1->Name = L"menuStrip1";
 			this->menuStrip1->Size = System::Drawing::Size(784, 24);
@@ -99,23 +104,45 @@ namespace GameOfLifeCLR {
 			// optionsToolStripMenuItem
 			// 
 			this->optionsToolStripMenuItem->Name = L"optionsToolStripMenuItem";
-			this->optionsToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->optionsToolStripMenuItem->Size = System::Drawing::Size(116, 22);
 			this->optionsToolStripMenuItem->Text = L"Options";
 			this->optionsToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::optionsToolStripMenuItem_Click);
 			// 
 			// exitToolStripMenuItem
 			// 
 			this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
-			this->exitToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->exitToolStripMenuItem->Size = System::Drawing::Size(116, 22);
 			this->exitToolStripMenuItem->Text = L"Exit";
 			this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::exitToolStripMenuItem_Click);
 			// 
 			// startToolStripMenuItem
 			// 
+			this->startToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(3) {this->startToolStripMenuItem1, 
+				this->stopToolStripMenuItem1, this->stepToolStripMenuItem});
 			this->startToolStripMenuItem->Name = L"startToolStripMenuItem";
 			this->startToolStripMenuItem->Size = System::Drawing::Size(43, 20);
 			this->startToolStripMenuItem->Text = L"Start";
-			this->startToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::startToolStripMenuItem_Click);
+			// 
+			// startToolStripMenuItem1
+			// 
+			this->startToolStripMenuItem1->Name = L"startToolStripMenuItem1";
+			this->startToolStripMenuItem1->Size = System::Drawing::Size(152, 22);
+			this->startToolStripMenuItem1->Text = L"Start";
+			this->startToolStripMenuItem1->Click += gcnew System::EventHandler(this, &Form1::startToolStripMenuItem1_Click);
+			// 
+			// stopToolStripMenuItem1
+			// 
+			this->stopToolStripMenuItem1->Name = L"stopToolStripMenuItem1";
+			this->stopToolStripMenuItem1->Size = System::Drawing::Size(152, 22);
+			this->stopToolStripMenuItem1->Text = L"Stop";
+			this->stopToolStripMenuItem1->Click += gcnew System::EventHandler(this, &Form1::stopToolStripMenuItem1_Click);
+			// 
+			// stepToolStripMenuItem
+			// 
+			this->stepToolStripMenuItem->Name = L"stepToolStripMenuItem";
+			this->stepToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->stepToolStripMenuItem->Text = L"One step";
+			this->stepToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::stepToolStripMenuItem_Click);
 			// 
 			// pictureBox1
 			// 
@@ -129,13 +156,6 @@ namespace GameOfLifeCLR {
 			this->pictureBox1->TabStop = false;
 			this->pictureBox1->Paint += gcnew System::Windows::Forms::PaintEventHandler(this, &Form1::pictureBox1_Paint);
 			// 
-			// stopToolStripMenuItem
-			// 
-			this->stopToolStripMenuItem->Name = L"stopToolStripMenuItem";
-			this->stopToolStripMenuItem->Size = System::Drawing::Size(43, 20);
-			this->stopToolStripMenuItem->Text = L"Stop";
-			this->stopToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::stopToolStripMenuItem_Click);
-			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -147,6 +167,7 @@ namespace GameOfLifeCLR {
 			this->Name = L"Form1";
 			this->Text = L"Form1";
 			this->SizeChanged += gcnew System::EventHandler(this, &Form1::Form1_SizeChanged);
+			this->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::Form1_KeyDown);
 			this->menuStrip1->ResumeLayout(false);
 			this->menuStrip1->PerformLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->pictureBox1))->EndInit();
@@ -172,7 +193,7 @@ namespace GameOfLifeCLR {
 			{
 				pForm1->CalculateGeneration();
 
-				pForm1->pictureBox1->Invalidate();
+				Thread::Sleep(500);
 			}
 		}
 
@@ -207,17 +228,15 @@ namespace GameOfLifeCLR {
 		int CountNeighbours(int x, int y)
 		{
 			int counter = 0;
+			int l = Math::Max(x-1, 0);
+			int r = Math::Min(x+1, frontBuffer->Length - 1);
+			int t = Math::Max(y-1, 0);
+			int d = Math::Min(y+1, frontBuffer[0]->Length - 1);
 
-			for (int i = Math::Max(x-1, 0); i <= Math::Min(x+1, frontBuffer->Length - 1); i++)
-			{
-				for (int j = Math::Max(y-1, 0); j <= Math::Min(y+1, frontBuffer[0]->Length - 1); j++)
-				{
+			for (int i = l; i <= r; i++)
+				for (int j = t; j <= d; j++)
 					if (frontBuffer[i][j] == 1)
-					{
 						counter++;
-					}
-				}
-			}
 			return counter;
 		}
 
@@ -315,17 +334,40 @@ private: System::Void pictureBox1_Paint(System::Object^  sender, System::Windows
 
 			 this->pictureBox1->Image = bmp;
 		 }
-private: System::Void startToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
+private: System::Void startToolStripMenuItem1_Click(System::Object^  sender, System::EventArgs^  e) 
 		 {
 			 resume = true;
 			 this->calcthr = gcnew Thread(gcnew ParameterizedThreadStart(&CalcThread));
 			 this->calcthr->Start(this);
 		 }
-
-private: System::Void stopToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
+private: System::Void stopToolStripMenuItem1_Click(System::Object^  sender, System::EventArgs^  e) 
 		 {
 			 resume = false;
 			 calcthr->Join();
+		 }
+private: System::Void stepToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
+		 {
+			 CalculateGeneration();
+		 }
+private: System::Void Form1_KeyDown(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e) 
+		 {
+			 switch (e->KeyCode)
+			 {
+			 case Keys::Space:
+				 stepToolStripMenuItem_Click(sender, e);
+				 break;
+			 case Keys::R:
+				 startToolStripMenuItem1_Click(sender, e);
+				 break;
+			 case Keys::S:
+				 stopToolStripMenuItem1_Click(sender, e);
+				 break;
+			 case Keys::Escape:
+				 exitToolStripMenuItem_Click(sender, e);
+				 break;
+			 default:
+				 break;
+			 }
 		 }
 };
 }
