@@ -235,8 +235,12 @@ namespace GameOfLifeCLR {
 
 			for (int i = l; i <= r; i++)
 				for (int j = t; j <= d; j++)
+				{
+					if (i == x && j == y)
+						continue;
 					if (frontBuffer[i][j] == 1)
 						counter++;
+				}
 			return counter;
 		}
 
@@ -257,11 +261,14 @@ namespace GameOfLifeCLR {
 							case 3:
 								backBuffer[i][j] = 1;
 								break;
+							default:
+								backBuffer[i][j] = 0;
+								break;
 						}
 					}
 					else
 					{
-						switch (neighbours - 1)
+						switch (neighbours)
 						{
 							case 2:
 							case 3:
