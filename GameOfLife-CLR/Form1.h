@@ -193,9 +193,15 @@ namespace GameOfLifeCLR {
 
 			while (resume)
 			{
+				/*if (pForm1->CompareWorlds() == -1)
+				{
+					resume = false;
+					MessageBox::Show("Миры достигли стабильного состояния.\nИтерации остановлены.");
+				}*/
+
 				pForm1->CalculateGeneration();
 
-				Thread::Sleep(30);
+				//Thread::Sleep(30);
 			}
 		}
 
@@ -311,6 +317,16 @@ namespace GameOfLifeCLR {
 			pictureBox1->Invalidate();
 		}
 
+		int CompareWorlds()
+		{
+			bool collision = false;
+			for (int i = 0; i < backBuffer->Length; i++)
+				for (int j = 0; j < backBuffer[0]->Length; j++)
+					if ( backBuffer[i][j] != frontBuffer[i][j])
+						return 0;
+			return -1;
+		}
+
 	private: System::Void exitToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
 			 {
 				 resume = false;
@@ -367,14 +383,20 @@ private: System::Void pictureBox1_Paint(System::Object^  sender, System::Windows
 		 }
 private: System::Void startToolStripMenuItem1_Click(System::Object^  sender, System::EventArgs^  e) 
 		 {
-			 resume = true;
-			 this->calcthr = gcnew Thread(gcnew ParameterizedThreadStart(&CalcThread));
-			 this->calcthr->Start(this);
+			 if (!resume)
+			 {
+				 resume = true;
+				 this->calcthr = gcnew Thread(gcnew ParameterizedThreadStart(&CalcThread));
+				 this->calcthr->Start(this);
+			 }
 		 }
 private: System::Void stopToolStripMenuItem1_Click(System::Object^  sender, System::EventArgs^  e) 
 		 {
-			 resume = false;
-			 calcthr->Join();
+			 if (resume)
+			 {
+				 resume = false;
+				 calcthr->Join();
+			 }
 		 }
 private: System::Void stepToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) 
 		 {
