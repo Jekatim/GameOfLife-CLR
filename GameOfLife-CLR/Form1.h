@@ -195,7 +195,7 @@ namespace GameOfLifeCLR {
 			{
 				pForm1->CalculateGeneration();
 
-				//Thread::Sleep(500);
+				Thread::Sleep(30);
 			}
 		}
 
@@ -231,19 +231,40 @@ namespace GameOfLifeCLR {
 		int CountNeighbours(int x, int y)
 		{
 			int counter = 0;
-			int l = Math::Max(x-1, 0);
-			int r = Math::Min(x+1, frontBuffer->Length - 1);
-			int t = Math::Max(y-1, 0);
-			int d = Math::Min(y+1, frontBuffer[0]->Length - 1);
+			int nb[2][8];
+			int k = 0;
 
-			for (int i = l; i <= r; i++)
-				for (int j = t; j <= d; j++)
-				{
+			for (int i = x - 1; i <= x + 1; i++) {
+				for (int j = y - 1; j <= y + 1; j++) {
+
 					if (i == x && j == y)
 						continue;
-					if (frontBuffer[i][j] == 1)
-						counter++;
+
+					if (i < 0) 
+						nb[0][k] = frontBuffer->Length - 1;
+					else 
+						if (i >= frontBuffer->Length) 
+							nb[0][k] = 0;
+						else
+							nb[0][k] = i;
+
+					if (j < 0) 
+						nb[1][k] = frontBuffer[0]->Length - 1;
+					else 
+						if (j >= frontBuffer[0]->Length) 
+							nb[1][k] = 0;
+						else
+							nb[1][k] = j;
+
+					k++;
 				}
+			}
+
+			for (int i = 0; i < 8; i++)
+			{
+				if (frontBuffer[nb[0][i]][nb[1][i]] == 1)
+					counter++;
+			}
 			return counter;
 		}
 
