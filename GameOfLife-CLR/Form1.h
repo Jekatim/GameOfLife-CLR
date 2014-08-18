@@ -193,12 +193,6 @@ namespace GameOfLifeCLR {
 
 			while (resume)
 			{
-				/*if (pForm1->CompareWorlds() == -1)
-				{
-					resume = false;
-					MessageBox::Show("Миры достигли стабильного состояния.\nИтерации остановлены.");
-				}*/
-
 				pForm1->CalculateGeneration();
 
 				//Thread::Sleep(30);
@@ -221,15 +215,15 @@ namespace GameOfLifeCLR {
 		{
 			Random^ rnd = gcnew Random();
 			double seed = Config::getSeed()/10.0;
-			for (int i = 0; i < backBuffer->Length; i++)
+			for (int i = 0; i < frontBuffer->Length; i++)
 			{
-				for (int j = 0; j < backBuffer[i]->Length; j++)
+				for (int j = 0; j < frontBuffer[i]->Length; j++)
 				{
-					backBuffer[i][j] = Math::Floor(rnd->NextDouble() + seed);
+					frontBuffer[i][j] = Math::Floor(rnd->NextDouble() + seed);
 				}
 			}
 
-			backBuffer->CopyTo(frontBuffer, 0);
+			//backBuffer->CopyTo(frontBuffer, 0);
 
 			pictureBox1->Invalidate();
 		}
@@ -312,6 +306,14 @@ namespace GameOfLifeCLR {
 				}
 			}
 
+			/*int res = CompareWorlds();
+
+			if (res == -1)
+			{
+				resume = false;
+				MessageBox::Show("Worlds are the same.");
+			}*/
+
 			backBuffer->CopyTo(frontBuffer, 0);
 
 			pictureBox1->Invalidate();
@@ -319,7 +321,6 @@ namespace GameOfLifeCLR {
 
 		int CompareWorlds()
 		{
-			bool collision = false;
 			for (int i = 0; i < backBuffer->Length; i++)
 				for (int j = 0; j < backBuffer[0]->Length; j++)
 					if ( backBuffer[i][j] != frontBuffer[i][j])
