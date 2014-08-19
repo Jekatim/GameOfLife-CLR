@@ -47,16 +47,10 @@ namespace GameOfLifeCLR {
 	private: System::Windows::Forms::ToolStripMenuItem^  exitToolStripMenuItem;
 	private: System::Windows::Forms::PictureBox^  pictureBox1;
 	private: System::Windows::Forms::ToolStripMenuItem^  runToolStripMenuItem;
-
-
-
 	private: System::Windows::Forms::ToolStripMenuItem^  startToolStripMenuItem1;
 	private: System::Windows::Forms::ToolStripMenuItem^  stopToolStripMenuItem1;
 	private: System::Windows::Forms::ToolStripMenuItem^  stepToolStripMenuItem;
 	private: System::ComponentModel::IContainer^  components;
-	protected: 
-
-	protected: 
 
 	private:
 		/// <summary>
@@ -166,7 +160,7 @@ namespace GameOfLifeCLR {
 			this->Controls->Add(this->menuStrip1);
 			this->MainMenuStrip = this->menuStrip1;
 			this->Name = L"Form1";
-			this->Text = L"Form1";
+			this->Text = L"GoL";
 			this->Shown += gcnew System::EventHandler(this, &Form1::Form1_Shown);
 			this->SizeChanged += gcnew System::EventHandler(this, &Form1::Form1_SizeChanged);
 			this->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::Form1_KeyDown);
@@ -211,6 +205,7 @@ namespace GameOfLifeCLR {
 			}
 		}
 
+		//random fill with seed
 		void FillRandomBuffer()
 		{
 			Random^ rnd = gcnew Random();
@@ -223,11 +218,10 @@ namespace GameOfLifeCLR {
 				}
 			}
 
-			//backBuffer->CopyTo(frontBuffer, 0);
-
 			pictureBox1->Invalidate();
 		}
 
+		//create array of indexes around point of interest
 		int CountNeighbours(int x, int y)
 		{
 			int counter = 0;
@@ -268,6 +262,7 @@ namespace GameOfLifeCLR {
 			return counter;
 		}
 
+		//classic rules
 		void CalculateGeneration()
 		{
 			int neighbours = 0;
@@ -305,14 +300,6 @@ namespace GameOfLifeCLR {
 					}
 				}
 			}
-
-			/*int res = CompareWorlds();
-
-			if (res == -1)
-			{
-				resume = false;
-				MessageBox::Show("Worlds are the same.");
-			}*/
 
 			backBuffer->CopyTo(frontBuffer, 0);
 
